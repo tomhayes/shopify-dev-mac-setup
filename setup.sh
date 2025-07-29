@@ -51,22 +51,33 @@ print_status "Installing Homebrew..."
 if ! command -v brew &> /dev/null; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
-    # Add Homebrew to PATH based on architecture
+    # Add Homebrew to PATH based on architecture and source it immediately
     if [[ $(uname -m) == "arm64" ]]; then
         # Apple Silicon Mac
         echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
         eval "$(/opt/homebrew/bin/brew shellenv)"
+        export PATH="/opt/homebrew/bin:$PATH"
     else
         # Intel Mac
         echo 'eval "$(/usr/local/bin/brew shellenv)"' >> ~/.zprofile
         eval "$(/usr/local/bin/brew shellenv)"
+        export PATH="/usr/local/bin:$PATH"
+    fi
+    
+    # Verify brew is now available
+    if ! command -v brew &> /dev/null; then
+        print_error "Homebrew installation failed - brew command not found"
+        exit 1
     fi
     
     print_success "Homebrew installed successfully"
 else
     print_success "Homebrew already installed"
-    brew update
 fi
+
+# Update Homebrew
+print_status "Updating Homebrew..."
+brew update
 
 # Install essential development tools
 print_status "Installing essential development tools..."
