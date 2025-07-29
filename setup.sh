@@ -49,24 +49,32 @@ fi
 # Install Homebrew
 print_status "Installing Homebrew..."
 if ! command -v brew &> /dev/null; then
+    print_status "Downloading and installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
     # Add Homebrew to PATH based on architecture and source it immediately
     if [[ $(uname -m) == "arm64" ]]; then
         # Apple Silicon Mac
+        BREW_PATH="/opt/homebrew/bin/brew"
         echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-        export PATH="/opt/homebrew/bin:$PATH"
+        if [ -f "$BREW_PATH" ]; then
+            eval "$($BREW_PATH shellenv)"
+            export PATH="/opt/homebrew/bin:$PATH"
+        fi
     else
         # Intel Mac
+        BREW_PATH="/usr/local/bin/brew"
         echo 'eval "$(/usr/local/bin/brew shellenv)"' >> ~/.zprofile
-        eval "$(/usr/local/bin/brew shellenv)"
-        export PATH="/usr/local/bin:$PATH"
+        if [ -f "$BREW_PATH" ]; then
+            eval "$($BREW_PATH shellenv)"
+            export PATH="/usr/local/bin:$PATH"
+        fi
     fi
     
     # Verify brew is now available
     if ! command -v brew &> /dev/null; then
         print_error "Homebrew installation failed - brew command not found"
+        print_error "Please install Homebrew manually: https://brew.sh"
         exit 1
     fi
     
@@ -77,7 +85,12 @@ fi
 
 # Update Homebrew
 print_status "Updating Homebrew..."
-brew update
+if command -v brew &> /dev/null; then
+    brew update
+else
+    print_error "Cannot update Homebrew - brew command not available"
+    exit 1
+fi
 
 # Install essential development tools
 print_status "Installing essential development tools..."
