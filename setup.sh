@@ -1,89 +1,4 @@
-# Restart affected applications
-print_status "Restarting affected applications..."
-killall Finder
-killall Dock
-killall SystemUIServer# Configure macOS system preferences for development
-print_status "Configuring macOS system preferences for development..."
-
-# Finder preferences
-print_status "Configuring Finder..."
-defaults write com.apple.finder AppleShowAllFiles -bool true  # Show hidden files
-defaults write com.apple.finder ShowPathbar -bool true       # Show path bar
-defaults write com.apple.finder ShowStatusBar -bool true     # Show status bar
-defaults write com.apple.finder _FXShowPosixPathInTitle -bool true  # Show full path in title
-defaults write NSGlobalDomain AppleShowAllExtensions -bool true     # Show all file extensions
-
-# Dock preferences
-print_status "Configuring Dock..."
-defaults write com.apple.dock tilesize -int 48              # Smaller dock icons
-defaults write com.apple.dock autohide -bool true           # Auto-hide dock
-defaults write com.apple.dock autohide-delay -float 0       # Remove dock show delay
-defaults write com.apple.dock show-recents -bool false      # Don't show recent apps in dock
-
-# Screenshots
-print_status "Configuring Screenshots..."
-defaults write com.apple.screencapture location -string "$HOME/Desktop/Screenshots"  # Screenshot location
-defaults write com.apple.screencapture type -string "png"   # PNG format
-defaults write com.apple.screencapture disable-shadow -bool true  # No window shadows
-mkdir -p "$HOME/Desktop/Screenshots"
-
-# Trackpad preferences
-print_status "Configuring Trackpad..."
-defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true  # Tap to click
-defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
-
-# Keyboard preferences
-print_status "Configuring Keyboard..."
-defaults write NSGlobalDomain KeyRepeat -int 2              # Fast key repeat
-defaults write NSGlobalDomain InitialKeyRepeat -int 15      # Short delay before repeat
-defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false  # Disable press-and-hold for accents
-
-# Terminal preferences
-print_status "Configuring Terminal..."
-defaults write com.apple.terminal StringEncodings -array 4  # UTF-8 encoding
-
-# Menu bar
-print_status "Configuring Menu Bar..."
-defaults write com.apple.menuextra.clock DateFormat -string "EEE MMM d  h:mm a"  # Show date in menu bar
-
-# Safari (for web development)
-print_status "Configuring Safari for development..."
-defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
-defaults write com.apple.Safari IncludeDevelopMenu -bool true
-defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
-defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
-
-print_success "macOS system preferences configured for development"
-print_warning "Some changes require a restart to take effect"# Set up Oh My Zsh
-print_status "Installing Oh My Zsh..."
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-    
-    # Install popular plugins
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-    
-    # Set up a nice theme and plugins
-    sed -i '' 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/g' ~/.zshrc
-    sed -i '' 's/plugins=(git)/plugins=(git node npm yarn docker shopify nvm zsh-autosuggestions zsh-syntax-highlighting)/g' ~/.zshrc
-    
-    print_success "Oh My Zsh installed with plugins and agnoster theme"
-else
-    print_success "Oh My Zsh already installed"
-fi# Install Claude Code CLI
-print_status "Installing Claude Code CLI..."
-if ! command -v claude_code &> /dev/null; then
-    # Check if npx is available for installing Claude Code
-    if command -v npx &> /dev/null; then
-        # Note: Claude Code installation method may vary - check Anthropic's docs
-        print_status "Claude Code CLI installation - please check Anthropic's documentation for latest installation method"
-        print_warning "Visit: https://docs.anthropic.com for Claude Code CLI installation instructions"
-    else
-        print_error "npx not found - needed for Claude Code CLI installation"
-    fi
-else
-    print_success "Claude Code CLI already installed"
-fi#!/bin/bash
+#!/bin/bash
 
 # Shopify Development Environment Setup Script for macOS
 # Run with: bash setup.sh
@@ -155,7 +70,7 @@ print_status "Installing essential development tools..."
 brew_packages=(
     # Version control
     "git"
-    "gh"  # GitHub CLI
+    "gh"
     
     # Node.js and package managers
     "nvm"
@@ -177,7 +92,7 @@ brew_packages=(
     # Development utilities
     "curl"
     "wget"
-    "jq"  # JSON processor
+    "jq"
     "tree"
     "htop"
     
@@ -216,16 +131,16 @@ cask_packages=(
     # Development tools
     "docker"
     "postman"
-    "tableplus"  # Database client
-    "gitkraken"  # Git GUI client
-    "herd"       # Laravel/PHP development environment
+    "tableplus"
+    "gitkraken"
+    "herd"
     
     # AI Tools
-    "claude"     # Claude Desktop app
+    "claude"
     
     # Terminals
-    "warp"       # Modern terminal
-    "hyper"      # Electron-based terminal
+    "warp"
+    "hyper"
     
     # Design tools
     "figma"
@@ -235,21 +150,21 @@ cask_packages=(
     "obsidian"
     "notion-calendar"
     "slack"
-    "raycast"    # Spotlight replacement
-    "1password"  # Password manager
+    "raycast"
+    "1password"
     
     # System utilities
-    "hazel"      # Automated file organization
-    "dozer"      # Hide menu bar icons
-    "rectangle"  # Window management
-    "imageoptim" # Image compression
+    "hazel"
+    "dozer"
+    "rectangle"
+    "imageoptim"
     
     # Database GUIs
-    "mongodb-compass"  # MongoDB GUI
-    "another-redis-desktop-manager"  # Redis GUI
+    "mongodb-compass"
+    "another-redis-desktop-manager"
     
     # Utilities
-    "ngrok"      # Tunneling tool
+    "ngrok"
 )
 
 for cask in "${cask_packages[@]}"; do
@@ -259,45 +174,6 @@ for cask in "${cask_packages[@]}"; do
         print_status "Installing $cask..."
         brew install --cask "$cask"
     fi
-done
-
-# Install Shopify CLI and Theme Kit
-print_status "Installing Shopify CLI and Theme Kit..."
-if ! command -v shopify &> /dev/null; then
-    npm install -g @shopify/cli @shopify/theme
-    print_success "Shopify CLI installed successfully"
-else
-    print_success "Shopify CLI already installed"
-    npm update -g @shopify/cli @shopify/theme
-fi
-
-# Install legacy Shopify Theme Kit
-print_status "Installing Shopify Theme Kit (legacy)..."
-if ! command -v theme &> /dev/null; then
-    brew tap shopify/shopify
-    brew install themekit
-    print_success "Shopify Theme Kit installed successfully"
-else
-    print_success "Shopify Theme Kit already installed"
-fi
-
-# Install useful Node.js global packages
-print_status "Installing useful Node.js global packages..."
-global_npm_packages=(
-    "lighthouse"
-    "pm2"
-    "nodemon"
-    "typescript"
-    "eslint"
-    "prettier"
-    "serve"
-    "http-server"
-    "koa"
-    "koa-generator"
-)
-
-for package in "${global_npm_packages[@]}"; do
-    npm install -g "$package"
 done
 
 # Set up Node.js with NVM
@@ -353,6 +229,60 @@ if command -v rbenv &> /dev/null; then
     
     print_success "Ruby $latest_ruby installed and set as global"
 fi
+
+# Install Shopify CLI and Theme Kit
+print_status "Installing Shopify CLI and Theme Kit..."
+if ! command -v shopify &> /dev/null; then
+    npm install -g @shopify/cli @shopify/theme
+    print_success "Shopify CLI installed successfully"
+else
+    print_success "Shopify CLI already installed"
+    npm update -g @shopify/cli @shopify/theme
+fi
+
+# Install legacy Shopify Theme Kit
+print_status "Installing Shopify Theme Kit (legacy)..."
+if ! command -v theme &> /dev/null; then
+    brew tap shopify/shopify
+    brew install themekit
+    print_success "Shopify Theme Kit installed successfully"
+else
+    print_success "Shopify Theme Kit already installed"
+fi
+
+# Install Claude Code CLI
+print_status "Installing Claude Code CLI..."
+if ! command -v claude_code &> /dev/null; then
+    # Check if npx is available for installing Claude Code
+    if command -v npx &> /dev/null; then
+        # Note: Claude Code installation method may vary - check Anthropic's docs
+        print_status "Claude Code CLI installation - please check Anthropic's documentation for latest installation method"
+        print_warning "Visit: https://docs.anthropic.com for Claude Code CLI installation instructions"
+    else
+        print_error "npx not found - needed for Claude Code CLI installation"
+    fi
+else
+    print_success "Claude Code CLI already installed"
+fi
+
+# Install useful Node.js global packages
+print_status "Installing useful Node.js global packages..."
+global_npm_packages=(
+    "lighthouse"
+    "pm2"
+    "nodemon"
+    "typescript"
+    "eslint"
+    "prettier"
+    "serve"
+    "http-server"
+    "koa"
+    "koa-generator"
+)
+
+for package in "${global_npm_packages[@]}"; do
+    npm install -g "$package"
+done
 
 # Set up Git (basic configuration)
 print_status "Configuring Git..."
@@ -411,6 +341,84 @@ if command -v mkcert &> /dev/null; then
     print_success "SSL certificates configured"
 fi
 
+# Set up Oh My Zsh
+print_status "Installing Oh My Zsh..."
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    
+    # Install popular plugins
+    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+    
+    # Set up a nice theme and plugins
+    sed -i '' 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/g' ~/.zshrc
+    sed -i '' 's/plugins=(git)/plugins=(git node npm yarn docker shopify nvm zsh-autosuggestions zsh-syntax-highlighting)/g' ~/.zshrc
+    
+    print_success "Oh My Zsh installed with plugins and agnoster theme"
+else
+    print_success "Oh My Zsh already installed"
+fi
+
+# Configure macOS system preferences for development
+print_status "Configuring macOS system preferences for development..."
+
+# Finder preferences
+print_status "Configuring Finder..."
+defaults write com.apple.finder AppleShowAllFiles -bool true
+defaults write com.apple.finder ShowPathbar -bool true
+defaults write com.apple.finder ShowStatusBar -bool true
+defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
+defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+
+# Dock preferences
+print_status "Configuring Dock..."
+defaults write com.apple.dock tilesize -int 48
+defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock autohide-delay -float 0
+defaults write com.apple.dock show-recents -bool false
+
+# Screenshots
+print_status "Configuring Screenshots..."
+defaults write com.apple.screencapture location -string "$HOME/Desktop/Screenshots"
+defaults write com.apple.screencapture type -string "png"
+defaults write com.apple.screencapture disable-shadow -bool true
+mkdir -p "$HOME/Desktop/Screenshots"
+
+# Trackpad preferences
+print_status "Configuring Trackpad..."
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+
+# Keyboard preferences
+print_status "Configuring Keyboard..."
+defaults write NSGlobalDomain KeyRepeat -int 2
+defaults write NSGlobalDomain InitialKeyRepeat -int 15
+defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
+
+# Terminal preferences
+print_status "Configuring Terminal..."
+defaults write com.apple.terminal StringEncodings -array 4
+
+# Menu bar
+print_status "Configuring Menu Bar..."
+defaults write com.apple.menuextra.clock DateFormat -string "EEE MMM d  h:mm a"
+
+# Safari (for web development)
+print_status "Configuring Safari for development..."
+defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
+defaults write com.apple.Safari IncludeDevelopMenu -bool true
+defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
+defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
+
+print_success "macOS system preferences configured for development"
+print_warning "Some changes require a restart to take effect"
+
+# Restart affected applications
+print_status "Restarting affected applications..."
+killall Finder
+killall Dock
+killall SystemUIServer
+
 # Create a sample .env file template
 print_status "Creating environment file template..."
 cat > ~/Development/shopify-projects/.env.example << EOF
@@ -432,11 +440,15 @@ print_success "🎉 Shopify development environment setup completed!"
 echo ""
 echo "📝 Next Steps:"
 echo "1. Restart your terminal or run: source ~/.zshrc"
-echo "2. Add your SSH key to GitHub: https://github.com/settings/keys"
-echo "4. Set up VS Code Settings Sync (Cmd+Shift+P → 'Settings Sync: Turn On')"
-echo "5. Install Claude Code CLI - check https://docs.anthropic.com for latest instructions"
-echo "6. Authenticate with Shopify CLI: shopify auth login"
-echo "7. Start a new Shopify project: shopify app create"
+echo "2. Verify Node.js setup with: nvm list"
+echo "3. Switch Node versions with: nvm use 14|stable|node"
+echo "4. Add your SSH key to GitHub: https://github.com/settings/keys"
+echo "5. Set up Rectangle window management shortcuts"
+echo "6. Configure Oh My Zsh theme and plugins to your liking"
+echo "7. Set up VS Code Settings Sync (Cmd+Shift+P → 'Settings Sync: Turn On')"
+echo "8. Install Claude Code CLI - check https://docs.anthropic.com for latest instructions"
+echo "9. Authenticate with Shopify CLI: shopify auth login"
+echo "10. Start a new Shopify project: shopify app create"
 echo ""
 echo "📁 Development directories created:"
 echo "   ~/Development/shopify-projects - Main Shopify projects and apps"
@@ -448,15 +460,22 @@ echo "   ~/Development/playground - Testing and experimentation"
 echo ""
 echo "🔧 Installed tools:"
 echo "   - Homebrew package manager"
-echo "   - Git and GitHub CLI"  
-echo "   - Node.js, npm, yarn, pnpm"
-echo "   - Ruby and rbenv"
-echo "   - Shopify CLI"
-echo "   - Docker, PostgreSQL, Redis"
+echo "   - Git and GitHub CLI with GitKraken GUI"
+echo "   - NVM with Node.js 14, stable, and latest + npm, yarn, pnpm"
+echo "   - Ruby with rbenv + latest stable version"
+echo "   - Python for scripting"
+echo "   - Shopify CLI + legacy Theme Kit"
+echo "   - Docker, PostgreSQL, Redis, Herd"
+echo "   - Database GUIs: MongoDB Compass, Redis Desktop Manager"
+echo "   - Modern terminals: Warp, Hyper + Oh My Zsh with plugins"
+echo "   - AI tools: Claude Desktop (+ Claude Code CLI setup instructions)"
+echo "   - Productivity: Notion, Obsidian, Slack, Raycast"
+echo "   - System utilities: Hazel, Dozer, Rectangle, ImageOptim, 1Password"
 echo "   - VS Code with Settings Sync ready"
 echo "   - Development browsers and tools"
 echo ""
 echo "💡 Pro tips:"
+echo "   - Use 'nvm use 14' for legacy projects, 'nvm use stable' for current work"
 echo "   - Run 'shopify theme dev' for new Shopify CLI live reloading"
 echo "   - Run 'theme watch' for legacy Theme Kit development"
 echo "   - Use Claude Desktop for AI assistance with coding and writing"
