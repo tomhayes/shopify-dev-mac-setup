@@ -152,7 +152,8 @@ brew_packages=(
     "jq"
     "tree"
     "htop"
-    
+    "thefuck"
+
     # Image optimization
     "imagemagick"
     "webp"
