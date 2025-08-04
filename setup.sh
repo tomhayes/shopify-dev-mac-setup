@@ -48,7 +48,7 @@ fi
 
 # Install Homebrew
 print_status "Installing Homebrew..."
-if ! command -v brew &> /dev/null; then
+if ! command brew -v &> /dev/null; then
     print_status "Downloading and installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
@@ -72,7 +72,7 @@ if ! command -v brew &> /dev/null; then
     fi
     
     # Verify brew is now available
-    if ! command -v brew &> /dev/null; then
+    if ! command brew -v &> /dev/null; then
         print_error "Homebrew installation failed - brew command not found"
         print_error "Please install Homebrew manually: https://brew.sh"
         exit 1
@@ -85,7 +85,7 @@ fi
 
 # Update Homebrew
 print_status "Updating Homebrew..."
-if command -v brew &> /dev/null; then
+if command brew -v &> /dev/null; then
     brew update
 else
     print_error "Cannot update Homebrew - brew command not available"
@@ -207,7 +207,7 @@ done
 
 # Set up Node.js with NVM
 print_status "Setting up Node.js with NVM..."
-if command -v nvm &> /dev/null; then
+if command nvm -v &> /dev/null; then
     # Source NVM for this session based on architecture
     export NVM_DIR="$HOME/.nvm"
     if [[ $(uname -m) == "arm64" ]]; then
@@ -247,7 +247,7 @@ fi
 
 # Set up Ruby environment
 print_status "Setting up Ruby environment..."
-if command -v rbenv &> /dev/null; then
+if command rbenv -v &> /dev/null; then
     # Initialize rbenv
     echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.zshrc
     echo 'eval "$(rbenv init -)"' >> ~/.zshrc
@@ -267,7 +267,7 @@ fi
 
 # Install Shopify CLI and Theme Kit
 print_status "Installing Shopify CLI and Theme Kit..."
-if ! command -v shopify &> /dev/null; then
+if ! command shopify -v &> /dev/null; then
     npm install -g @shopify/cli @shopify/theme
     print_success "Shopify CLI installed successfully"
 else
@@ -277,7 +277,7 @@ fi
 
 # Install legacy Shopify Theme Kit
 print_status "Installing Shopify Theme Kit (legacy)..."
-if ! command -v theme &> /dev/null; then
+if ! command theme -v &> /dev/null; then
     brew tap shopify/shopify
     brew install themekit
     print_success "Shopify Theme Kit installed successfully"
@@ -287,7 +287,7 @@ fi
 
 # Install Claude Code CLI
 print_status "Installing Claude Code CLI..."
-if ! command -v claude_code &> /dev/null; then
+if ! command claude -v &> /dev/null; then
     # Check if npx is available for installing Claude Code
     if command -v npx &> /dev/null; then
         # Note: Claude Code installation method may vary - check Anthropic's docs
@@ -356,7 +356,7 @@ mkdir -p ~/Development/playground
 
 # Set up VS Code Settings Sync
 print_status "Setting up VS Code Settings Sync..."
-if command -v code &> /dev/null; then
+if command code -v &> /dev/null; then
     print_success "VS Code installed - you can now sync your settings!"
     print_warning "To sync your extensions and settings:"
     echo "   1. Open VS Code"
@@ -370,7 +370,7 @@ fi
 
 # Set up SSL certificates for local development
 print_status "Setting up SSL certificates for local development..."
-if command -v mkcert &> /dev/null; then
+if command mkcert -v &> /dev/null; then
     mkcert -install
     mkcert localhost 127.0.0.1 ::1
     print_success "SSL certificates configured"
