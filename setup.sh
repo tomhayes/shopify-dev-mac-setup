@@ -30,6 +30,31 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Helper function to reload shell environment
+reload_shell_env() {
+    print_status "Reloading shell environment..."
+    # Source common shell files if they exist
+    [ -f ~/.zprofile ] && source ~/.zprofile
+    [ -f ~/.zshrc ] && source ~/.zshrc
+    
+    # Re-export PATH to ensure new tools are available
+    export PATH="$PATH"
+}
+
+# Helper function to check if a command exists and is working
+check_command() {
+    local cmd="$1"
+    local friendly_name="${2:-$cmd}"
+    
+    if command -v "$cmd" &> /dev/null; then
+        print_success "$friendly_name is available"
+        return 0
+    else
+        print_warning "$friendly_name is not available in current session"
+        return 1
+    fi
+}
+
 # Check if running on macOS
 if [[ "$OSTYPE" != "darwin"* ]]; then
     print_error "This script is designed for macOS only"
@@ -77,6 +102,9 @@ if ! command brew -v &> /dev/null; then
         print_error "Please install Homebrew manually: https://brew.sh"
         exit 1
     fi
+    
+    # Reload environment to ensure brew is available
+    reload_shell_env
     
     print_success "Homebrew installed successfully"
 else
@@ -207,7 +235,11 @@ done
 
 # Set up Node.js with NVM
 print_status "Setting up Node.js with NVM..."
-if command nvm -v &> /dev/null; then
+
+# First, reload environment to ensure NVM is available
+reload_shell_env
+
+if command -v nvm &> /dev/null; then
     # Source NVM for this session based on architecture
     export NVM_DIR="$HOME/.nvm"
     if [[ $(uname -m) == "arm64" ]]; then
@@ -223,6 +255,9 @@ if command nvm -v &> /dev/null; then
         echo '[ -s "/usr/local/opt/nvm/nvm.sh" ] && \. "/usr/local/opt/nvm/nvm.sh"' >> ~/.zshrc
         echo '[ -s "/usr/local/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/usr/local/opt/nvm/etc/bash_completion.d/nvm"' >> ~/.zshrc
     fi
+    
+    # Reload environment to make NVM available in current session
+    reload_shell_env
     
     # Install Node.js versions
     print_status "Installing Node.js 14 (legacy support)..."
@@ -247,7 +282,7 @@ fi
 
 # Set up Ruby environment
 print_status "Setting up Ruby environment..."
-if command rbenv -v &> /dev/null; then
+if command -v rbenv &> /dev/null; then
     # Initialize rbenv
     echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.zshrc
     echo 'eval "$(rbenv init -)"' >> ~/.zshrc
@@ -255,6 +290,9 @@ if command rbenv -v &> /dev/null; then
     # Source rbenv for this session
     export PATH="$HOME/.rbenv/bin:$PATH"
     eval "$(rbenv init -)"
+    
+    # Reload environment
+    reload_shell_env
     
     # Install latest stable Ruby
     latest_ruby=$(rbenv install -l | grep -v - | tail -1 | tr -d ' ')
@@ -321,8 +359,14 @@ done
 
 # Set up Git (basic configuration)
 print_status "Configuring Git..."
-read -p "Enter your Git username: " git_username
-read -p "Enter your Git email: " git_email
+read -r -p "Enter your Git username: " git_username
+read -r -p "Enter your Git email: " git_email
+
+# Validate inputs
+if [[ -z "$git_username" || -z "$git_email" ]]; then
+    print_error "Git username and email cannot be empty"
+    exit 1
+fi
 
 git config --global user.name "$git_username"
 git config --global user.email "$git_email"
@@ -382,8 +426,8 @@ if [ ! -d "$HOME/.oh-my-zsh" ]; then
     sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
     
     # Install popular plugins
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+    git clone https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}"/plugins/zsh-autosuggestions
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}"/plugins/zsh-syntax-highlighting
     
     # Set up a nice theme and plugins
     sed -i '' 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/g' ~/.zshrc
@@ -471,6 +515,17 @@ print_status "Cleaning up..."
 brew cleanup
 
 print_success "🎉 Shopify development environment setup completed!"
+
+# Final environment verification
+print_status "Verifying installed tools..."
+check_command "brew" "Homebrew"
+check_command "git" "Git"
+check_command "node" "Node.js"
+check_command "npm" "npm"
+check_command "nvm" "NVM"
+check_command "ruby" "Ruby"
+check_command "rbenv" "rbenv"
+check_command "shopify" "Shopify CLI"
 
 echo ""
 echo "📝 Next Steps:"
